@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#f5f5f4"/>
+  <rect x="80" y="80" width="1040" height="740" fill="#e7e5e4" stroke="#d6d3d1" stroke-width="2"/>
+  <text x="50%" y="48%" dominant-baseline="middle" text-anchor="middle" fill="#57534e" font-family="Inter, Arial, sans-serif" font-size="36" letter-spacing="2">IMAGEN PRODUCTO</text>
+  <text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="#78716c" font-family="Inter, Arial, sans-serif" font-size="18">Usa este placeholder o reemplazalo en public/images/product.svg</text>
+</svg>
