@@ -1,39 +1,55 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Artesanía & Veta
 
-# Run and deploy your AI Studio app
+E-commerce boutique de muebles artesanales en madera, con catálogo, carrito, checkout y asistente inteligente.  
+Creado inicialmente con **Google AI Studio**, luego personalizado por mí y continuado con la ayuda de **Codex**.  
+Despliegue previsto en **Vercel**.
 
-This contains everything you need to run your app locally.
+## Stack
+- React + TypeScript + Vite
+- React Router
+- Tailwind CSS
 
-View your app in AI Studio: https://ai.studio/apps/drive/1mXjY540MwXhRh9ZyxCj6ewW8cKs3q_Xf
+## Requisitos
+- Node.js 18+ (recomendado)
 
-## Run Locally
+## Instalación
+```bash
+npm install
+```
 
-**Prerequisites:**  Node.js
+## Variables de entorno
+Este proyecto usa **Gemini** en el frontend (Vite), por lo que la key se expone en el bundle.
 
+Creá `.env` en la raíz:
+```
+VITE_GEMINI_API_KEY=tu_clave
+```
 
-1. Install dependencies:
-   `npm install`
+## Desarrollo local
+```bash
+npm run dev
+```
 
-2. Create an env file for the backend:
-   - Duplicate `.env.example` as `.env.local` (recommended) and set `GEMINI_API_KEY`.
-   - `.env.local` ya está ignorado por git via `*.local`.
+App:
+- `http://localhost:3000`
 
-3. Start the backend (keeps your API key off the frontend):
-   `npm run dev:server`
+## Build
+```bash
+npm run build
+npm run preview
+```
 
-4. Start the frontend:
-   `npm run dev`
+## Deploy en Vercel
+1. Subí el repo a GitHub.
+2. Importá el proyecto en Vercel.
+3. Agregá la variable de entorno `VITE_GEMINI_API_KEY`.
+4. Deploy.
 
-5. Verify:
-   - Frontend: `http://localhost:3000`
-   - Healthcheck: `http://localhost:8787/api/health`
+## Notas
+- El módulo de envío calcula costo en base al CP (4 dígitos), con **gratis para CP 5000 (Córdoba)** y costo por km para el resto del país.
+- El auth es **mock con localStorage** (registro, login, “olvidé contraseña” simulado).
 
-## Changing images
-
-The project includes placeholders under `public/images/`. Replace them with your own files (same names) or update `assets.ts`:
-
-- `public/images/hero.svg`
-- `public/images/workshop.svg`
-- `public/images/product.svg` (fallback for products)
+## Créditos
+- Generación inicial: **Google AI Studio**
+- Personalización y mejoras: **Usuario**
+- Iteraciones y soporte técnico: **Codex**
