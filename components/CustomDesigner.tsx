@@ -26,7 +26,7 @@ const CustomDesigner: React.FC = () => {
   };
 
   return (
-    <section id="designer" className="py-24 bg-stone-900 text-white overflow-hidden scroll-mt-28">
+    <section id="designer" className="py-24 bg-stone-900 text-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="reveal opacity-0 translate-y-10 transition-all duration-1000">
@@ -43,7 +43,7 @@ const CustomDesigner: React.FC = () => {
                 <textarea 
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Ej: Una mesa exterior de nogal con bordes orgánicos y patas de hierro negro..."
+                  placeholder="Ej: Una mesa ratona de nogal con bordes orgánicos y patas de hierro negro..."
                   className="w-full bg-stone-800 border-stone-700 rounded-sm p-6 text-white focus:outline-none focus:ring-1 focus:ring-stone-400 min-h-[120px] resize-none"
                 />
               </div>

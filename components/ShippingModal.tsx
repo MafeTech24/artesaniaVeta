@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { Product } from '../types';
+import { calculateShippingByPostal } from '../services/shippingService';
 
 interface ShippingModalProps {
   product: Product;
@@ -9,7 +10,7 @@ interface ShippingModalProps {
 // Valida CPA (e.g. X5000ABC) o CP numérico (e.g. 5000)
 function isValidPostalCode(value: string) {
   const v = value.trim().toUpperCase();
-  return /^\d{4}$/.test(v) || /^[A-Z]\d{4}[A-Z]{3}$/.test(v);
+  return /^\d{4}$/.test(v);
 }
 
 function estimateDays(postal: string) {
@@ -22,13 +23,15 @@ function estimateDays(postal: string) {
 const ShippingModal: React.FC<ShippingModalProps> = ({ product, onClose }) => {
   const [postalCode, setPostalCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [quote, setQuote] = useState<{ cost: number; etaDaysMin: number; etaDaysMax: number; zone: string } | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const valid = useMemo(() => isValidPostalCode(postalCode), [postalCode]);
   const eta = useMemo(() => (valid ? estimateDays(postalCode) : null), [valid, postalCode]);
 
   const message = useMemo(() => {
     const pc = postalCode.trim();
-    return `Hola! Quiero consultar envío para: ${product.name}.\nCP destino: ${pc || '(sin informar)'}\n¿Costo estimado, opciones de logística y tiempos?`;
+    return `Hola! Quiero consultar envío para: ${product.name}.\nCP destino: ${pc || '(sin informar)'}\n¿Costo estimado, opciones de logÃ­stica y tiempos?`;
   }, [product.name, postalCode]);
 
   const copy = async () => {
@@ -40,6 +43,30 @@ const ShippingModal: React.FC<ShippingModalProps> = ({ product, onClose }) => {
       // Si el navegador bloquea clipboard, no hacemos nada.
     }
   };
+
+  useEffect(() => {
+    let active = true;
+    if (!valid) {
+      setQuote(null);
+      return () => {
+        active = false;
+      };
+    }
+
+    setIsCalculating(true);
+    calculateShippingByPostal(postalCode)
+      .then((result) => {
+        if (!active) return;
+        setQuote(result);
+      })
+      .finally(() => {
+        if (active) setIsCalculating(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [postalCode, valid]);
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 md:p-8 animate-fade-in">
@@ -59,56 +86,38 @@ const ShippingModal: React.FC<ShippingModalProps> = ({ product, onClose }) => {
 
         <div className="p-6 space-y-5">
           <div>
-            <label className="block text-[10px] uppercase tracking-widest text-stone-400 mb-2">Código Postal (CPA o 4 dígitos)</label>
+            <label className="block text-[10px] uppercase tracking-widest text-stone-400 mb-2">Código Postal (4 dígitos)</label>
             <input
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
-              placeholder="Ej: 5000 o X5000ABC"
+              placeholder="Ej: 5000"
               className="w-full bg-stone-100 p-4 text-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
             />
             {postalCode.trim().length > 0 && !valid && (
-              <p className="text-xs text-red-600 mt-2">Formato inválido. Usá 5000 o X5000ABC.</p>
+              <p className="text-xs text-red-600 mt-2">Formato inválido. Usá 4 dígitos.</p>
             )}
           </div>
 
           <div className="bg-stone-50 border border-stone-100 p-4 space-y-2">
             <p className="text-sm text-stone-800">
-              <span className="font-medium">Tiempo estimado:</span> {eta ?? 'Ingresá tu CP para estimar.'}
+              <span className="font-medium">Tiempo estimado:</span>{' '}
+              {quote ? `${quote.etaDaysMin} - ${quote.etaDaysMax} días hábiles` : (eta ?? 'Ingresá tu CP para estimar.')}
+            </p>
+            <p className="text-sm text-stone-800">
+              <span className="font-medium">Costo:</span>{' '}
+              {isCalculating
+                ? 'Calculando...'
+                : quote
+                  ? (quote.cost === 0
+                    ? 'Gratis (Córdoba 5000)'
+                    : new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(quote.cost))
+                  : 'Ingresá tu CP para estimar.'}
             </p>
             <p className="text-[11px] text-stone-500 leading-relaxed">
               El costo de envío para muebles depende de dimensiones, peso y seguro. La cotización final se confirma al validar destino y detalle de la pieza.
             </p>
           </div>
 
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-stone-400 mb-2">Mensaje sugerido</p>
-            <textarea
-              readOnly
-              value={message}
-              rows={4}
-              className="w-full bg-white border border-stone-200 p-4 text-sm text-stone-800 resize-none"
-            />
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-stone-100 flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={copy}
-            className="flex-1 border border-stone-200 py-4 text-[10px] tracking-widest uppercase font-bold hover:bg-stone-50 transition-colors"
-          >
-            {copied ? 'Copiado' : 'Copiar mensaje'}
-          </button>
-          <button
-            onClick={() => {
-              onClose();
-              // Lleva al usuario al formulario de contacto
-              const el = document.querySelector('#contact') as HTMLElement | null;
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="flex-1 bg-stone-900 text-white py-4 text-[10px] tracking-widest uppercase font-bold hover:bg-stone-800 transition-colors"
-          >
-            Ir a contacto
-          </button>
         </div>
       </div>
     </div>
@@ -116,3 +125,5 @@ const ShippingModal: React.FC<ShippingModalProps> = ({ product, onClose }) => {
 };
 
 export default ShippingModal;
+
+

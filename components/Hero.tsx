@@ -1,14 +1,13 @@
 
 import React from 'react';
-import { SITE_IMAGES } from '../assets';
 
 const Hero: React.FC = () => {
   return (
-    <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden scroll-mt-28">
+    <section id="home" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[10000ms] scale-110 hover:scale-100"
-        style={{ backgroundImage: `url("${SITE_IMAGES.heroBackground}")` }}
+        style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&q=80&w=2000")' }}
       >
         <div className="absolute inset-0 bg-stone-900/40" />
       </div>
@@ -23,7 +22,7 @@ const Hero: React.FC = () => {
           Cada pieza cuenta una historia grabada en sus vetas. Muebles diseñados para trascender generaciones, creados a mano con respeto por la naturaleza.
         </p>
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <a href="#collections" className="px-10 py-4 bg-white text-stone-900 text-sm tracking-widest uppercase hover:bg-stone-200 transition-all font-medium">
+          <a href="#collections" className="px-10 py-4 bg-white text-stone-900 text-sm tracking-widest uppercase hover:bg-stone-200 transition-all font-bold shadow-2xl">
             Ver Colecciones
           </a>
           <a href="#about" className="px-10 py-4 border border-white text-white text-sm tracking-widest uppercase hover:bg-white/10 transition-all font-medium">
@@ -31,12 +30,6 @@ const Hero: React.FC = () => {
           </a>
         </div>
       </div>
-
-      {/* Scroll Indicator */}
-      <a href="#collections" className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce cursor-pointer group">
-        <div className="w-[1px] h-12 bg-white transition-all group-hover:h-16" />
-        <span className="text-[10px] text-white uppercase tracking-widest">Explorar</span>
-      </a>
     </section>
   );
 };

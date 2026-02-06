@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Product } from '../types';
-import { SITE_IMAGES } from '../assets';
 
 interface ProductCardProps {
   product: Product;
@@ -37,9 +36,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = SITE_IMAGES.productPlaceholder;
-          }}
         />
         <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/10 transition-colors duration-500" />
         <div className="absolute top-4 left-4">

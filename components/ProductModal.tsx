@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { SITE_IMAGES } from '../assets';
-import { useCart } from '../contexts/cart';
+import { useCart } from '../context/CartContext';
 import ShippingModal from './ShippingModal';
 
 interface ProductModalProps {
@@ -11,12 +10,14 @@ interface ProductModalProps {
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
-  const { addItem, openCart } = useCart();
-  const [shippingOpen, setShippingOpen] = useState(false);
+  const { addItem, items } = useCart();
+  const [showShipping, setShowShipping] = useState(false);
+  
+  const inCart = items.find(i => i.id === product.id);
+  const currentQty = inCart?.quantity || 0;
 
   const handleAddToCart = () => {
     addItem(product, 1);
-    openCart();
   };
 
   return (
@@ -24,7 +25,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
       <div className="absolute inset-0 bg-stone-900/90 backdrop-blur-sm" onClick={onClose} />
       
       <div className="relative bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-sm flex flex-col md:flex-row shadow-2xl">
-        <button
+        <button 
           onClick={onClose}
           className="absolute top-6 right-6 z-10 text-stone-900 md:text-stone-400 hover:text-stone-900 transition-colors"
         >
@@ -39,9 +40,6 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             src={product.image} 
             alt={product.name}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = SITE_IMAGES.productPlaceholder;
-            }}
           />
         </div>
 
@@ -53,7 +51,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
             
             <div className="flex items-center gap-4 mb-8">
               <span className="text-2xl font-light text-stone-900">
-                {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(product.price)}
+                {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(product.price)}
               </span>
               <span className={`px-3 py-1 text-[10px] tracking-widest uppercase font-bold rounded-full ${product.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {product.stock > 0 ? `Stock: ${product.stock} unidades` : 'Sin Stock'}
@@ -77,16 +75,20 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
           </div>
 
           <div className="mt-12 flex flex-col sm:flex-row gap-4">
-            <button
+            <button 
               onClick={handleAddToCart}
-              disabled={product.stock <= 0}
-              className="flex-1 bg-stone-900 text-white py-5 text-xs tracking-widest uppercase font-bold hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:hover:bg-stone-900"
+              disabled={product.stock <= currentQty}
+              className={`flex-1 py-5 text-xs tracking-widest uppercase font-bold transition-all ${
+                product.stock <= currentQty 
+                ? 'bg-stone-100 text-stone-400 cursor-not-allowed' 
+                : 'bg-stone-900 text-white hover:bg-stone-800 shadow-lg hover:-translate-y-1'
+              }`}
             >
-              {product.stock > 0 ? 'Añadir al Carrito' : 'Sin Stock'}
+              {currentQty > 0 ? `Agregado (${currentQty})` : 'Añadir al Carrito'}
             </button>
-            <button
-              onClick={() => setShippingOpen(true)}
+            <button 
               className="flex-1 border border-stone-200 py-5 text-xs tracking-widest uppercase font-bold hover:bg-stone-50 transition-colors"
+              onClick={() => setShowShipping(true)}
             >
               Consultar Envío
             </button>
@@ -94,7 +96,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
         </div>
       </div>
 
-      {shippingOpen && <ShippingModal product={product} onClose={() => setShippingOpen(false)} />}
+      {showShipping && (
+        <ShippingModal
+          product={product}
+          onClose={() => setShowShipping(false)}
+        />
+      )}
     </div>
   );
 };

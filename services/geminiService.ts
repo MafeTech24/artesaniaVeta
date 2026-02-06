@@ -1,46 +1,66 @@
-// IMPORTANT SECURITY NOTE
-// -----------------------
-// No expongas tu Gemini API Key en el frontend. Cualquier clave que llegue al navegador
-// puede ser vista por terceros.
-//
-// Esta app llama a un backend (server/index.js) que mantiene la clave en el servidor.
-// En desarrollo, Vite hace proxy de /api hacia http://localhost:8787 (ver vite.config.ts).
 
-export type ChatHistory = { role: 'user' | 'model'; parts: { text: string }[] }[];
+import { GoogleGenAI } from "@google/genai";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+// Vite expone variables con prefijo VITE_ en el cliente.
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
-const jsonFetch = async <T>(url: string, body: unknown): Promise<T> => {
-  const res = await fetch(`${API_BASE}${url}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const msg = await res.text().catch(() => '');
-    throw new Error(msg || `Request failed with status ${res.status}`);
-  }
-
-  return res.json() as Promise<T>;
-};
-
-export const sendMessageToGemini = async (message: string, history: ChatHistory) => {
+export const sendMessageToGemini = async (
+  message: string,
+  history: { role: 'user' | 'model'; parts: { text: string }[] }[],
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  
   try {
-    const data = await jsonFetch<{ text: string }>(`/api/gemini/chat`, { message, history });
-    return data.text;
+    const chat = ai.chats.create({
+      model: 'gemini-3-flash-preview',
+      config: {
+        systemInstruction: `Eres "Veta-Bot", el asistente experto de la tienda "Artesanía & Veta". 
+        Tu tono es profesional, cálido y elegante. 
+        Estamos ubicados en Belgrano 789, Barrio Güemes, Córdoba, Argentina.
+        Sabes todo sobre muebles de madera hechos a mano. 
+        Materiales: Roble, Nogal, Fresno, Ébano, Petiribí. 
+        Procesos: Barnizado natural, tallado a mano, ensamble tradicional sin tornillos. 
+        Si el cliente pregunta por precios, refiérelo a la sección de colecciones (#collections). Los precios están en Pesos Argentinos (ARS).
+        Responde siempre en español. Sé conciso pero servicial.`,
+        temperature: 0.7,
+      },
+    });
+
+    const result = await chat.sendMessage({ message });
+    return result.text ?? "Lo siento, no pude generar una respuesta en este momento.";
   } catch (error) {
-    console.error('Error calling backend Gemini chat:', error);
-    return 'Lo siento, ahora mismo no puedo conectar con el asistente. Si es tu primera vez ejecutando el proyecto, asegurate de levantar el servidor (npm run dev:server) y configurar GEMINI_API_KEY en .env.local.';
+    console.error("Error calling Gemini API:", error);
+    return "Lo siento, estoy teniendo dificultades para conectar ahora mismo. ¿Podrías intentarlo de nuevo en un momento?";
   }
 };
 
 export const generateFurnitureImage = async (prompt: string): Promise<string | null> => {
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
   try {
-    const data = await jsonFetch<{ dataUrl: string | null }>(`/api/gemini/image`, { prompt });
-    return data.dataUrl;
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          {
+            text: `Un mueble de madera artesanal de alta gama, estilo elegante y minimalista, fotografía profesional de estudio, iluminación cálida, fondo neutro. Descripción específica: ${prompt}`,
+          },
+        ],
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1"
+        }
+      }
+    });
+
+    for (const part of response?.candidates?.[0]?.content?.parts ?? []) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
+    }
+    return null;
   } catch (error) {
-    console.error('Error calling backend Gemini image:', error);
+    console.error("Error generating image:", error);
     return null;
   }
 };
